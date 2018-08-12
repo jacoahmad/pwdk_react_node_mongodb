@@ -1,0 +1,7 @@
+.itemList {
+  padding: 20px;
+  border: 1px solid #e2e2e2;
+  border-radius: 30px;
+  background: #f7f7f7;
+  list-style: none;
+}
