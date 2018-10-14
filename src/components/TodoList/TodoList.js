@@ -2,6 +2,7 @@ import React, { Component } from 'react';
 import Card from '@material-ui/core/Card';
 import CardContent from '@material-ui/core/CardContent';
 import _ from 'lodash';
+import axios from 'axios';
 import InputGroup from '../shared/InputGroup/InputGroup';
 import TodoListItem from '../TodoListItem/TodoListItem';
 import ListOfBlog from '../ListOfBlog/ListOfBlog';
@@ -11,47 +12,40 @@ class TodoList extends Component {
     title: '',
     error: {},
     form: {
-      // id: '',
-      date_created: '', // Date
-      date_updated: '', // Date
       title: '',
       subtitle: '',
       text: '',
-      active: false
-      // images: [],
-      // array<{
-      //   url: string,
-      //   type: string,
-      //   id: string
-      // }>,]
-      // category: [],
-      // comments: [],
-      // [{
-      //   name: string,
-      //   message: string,
-      //   id: string
-      // }]
+      active: false,
     },
-    list: []
+    list: [],
   };
+
+  componentDidMount() {
+    this.fetchBlogs();
+  }
+
+  fetchBlogs = () => {
+    axios.get('http://localhost:8000/blogs').then(res => {
+      if (res.data.status === 'ERROR') {
+        return false;
+      }
+      return this.setState({ list: res.data.blogs });
+    });
+  };
+
   handleChange = e => {
     this.setState({
       form: {
         ...this.state.form,
-        [e.target.name]: e.target.value
-      }
+        [e.target.name]: e.target.value,
+      },
     });
   };
 
   validateForm = () => {
     let error = {};
     for (let data in this.state.form) {
-      if (
-        data !== 'date_created' &&
-        data !== 'date_updated' &&
-        data !== 'active'
-      ) {
-        console.log(data);
+      if (data !== 'date_created' && data !== 'date_updated' && data !== 'active') {
         if (this.state.form[data].length === 0) {
           error[data] = true;
         }
@@ -65,43 +59,29 @@ class TodoList extends Component {
 
     const error = !this.validateForm();
     if (error) {
-      return;
+      return alert('All fields are required');
     }
-    const data = {
-      ...this.state.form,
-      date_created: Date.now()
-    };
-    this.setState({
-      list: [...this.state.list, data],
-      form: {
-        // id: '',
-        date_created: '', // Date
-        date_updated: '', // Date
-        title: '',
-        subtitle: '',
-        text: '',
-        active: false
-        // images: [],
-        // array<{
-        //   url: string,
-        //   type: string,
-        //   id: string
-        // }>,]
-        // category: [],
-        // comments: [],
-        // [{
-        //   name: string,
-        //   message: string,
-        //   id: string
-        // }]
-      }
-    });
+
+    axios
+      .post('http://localhost:8000/blog', this.state.form)
+      .then(() => {
+        this.fetchBlogs();
+        this.setState({
+          form: {
+            title: '',
+            subtitle: '',
+            text: '',
+            active: false,
+          },
+        });
+      })
+      .catch(err => console.error(err));
   };
   handleDeleteList = index => {
     const list = this.state.list.concat();
     delete list[index];
     return this.setState({
-      list
+      list,
     });
   };
   render() {
